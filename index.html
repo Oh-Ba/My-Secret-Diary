@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Secret Diary</title>
+
+<meta name="description" content="A private, offline diary. Encrypted on your device, opened only by your password.">
+<meta name="theme-color" content="#141221">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex, nofollow">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Diary">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<!-- ───────────────────────── Gate: setup / unlock ───────────────────────── -->
+<div class="gate" id="gate">
+  <form class="gate-card" id="gateForm" autocomplete="off">
+    <div class="clasp" aria-hidden="true">
+      <svg viewBox="0 0 48 64" class="clasp-svg">
+        <rect x="1" y="1" width="46" height="62" rx="6" class="clasp-plate"/>
+        <circle cx="24" cy="24" r="7" class="clasp-hole"/>
+        <path d="M20.5 28 L24 46 L27.5 28 Z" class="clasp-hole"/>
+      </svg>
+    </div>
+
+    <h1 class="gate-title">My Secret Diary</h1>
+    <p class="gate-sub" id="gateSub">Enter your diary password.</p>
+
+    <label class="field">
+      <span class="field-label">Diary password</span>
+      <input type="password" id="gatePass" autocomplete="current-password" spellcheck="false" required>
+    </label>
+
+    <label class="field" id="gateConfirmField" hidden>
+      <span class="field-label">Repeat password</span>
+      <input type="password" id="gatePass2" autocomplete="new-password" spellcheck="false">
+    </label>
+
+    <p class="notice" id="gateNotice" role="status"></p>
+
+    <button type="submit" class="btn btn-brass" id="gateBtn">Open the diary</button>
+
+    <p class="fine" id="gateFine"></p>
+  </form>
+</div>
+
+<!-- ───────────────────────────── Diary ───────────────────────────── -->
+<div class="app" id="app" hidden>
+
+  <header class="topbar">
+    <button class="icon-btn only-narrow" id="menuBtn" aria-label="Show memos" aria-expanded="false">☰</button>
+    <h1 class="wordmark">My Secret Diary</h1>
+    <div class="topbar-actions">
+      <div class="menu-wrap">
+        <button class="btn btn-quiet" id="moreBtn" aria-haspopup="true" aria-expanded="false">More</button>
+        <div class="menu" id="moreMenu" hidden role="menu">
+          <button role="menuitem" id="backupBtn">Save backup</button>
+          <button role="menuitem" id="restoreBtn">Restore backup</button>
+          <button role="menuitem" id="changePassBtn">Change diary password</button>
+          <button role="menuitem" id="installBtn" hidden>Install on this device</button>
+        </div>
+      </div>
+      <button class="btn btn-brass" id="lockBtn">Lock diary</button>
+    </div>
+  </header>
+
+  <div class="body">
+    <div class="scrim" id="scrim" hidden></div>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <input type="search" id="search" placeholder="Search memos" spellcheck="false">
+        <button class="btn btn-brass btn-block" id="newBtn">Write a new memo</button>
+      </div>
+      <ul class="page-list" id="pageList"></ul>
+      <p class="sidebar-foot" id="pageCount"></p>
+    </aside>
+
+    <main class="desk" id="desk">
+      <!-- empty state -->
+      <div class="empty" id="empty">
+        <p class="empty-title">Nothing written yet.</p>
+        <p class="empty-sub">Start a memo — it is encrypted the moment you save.</p>
+        <button class="btn btn-brass" id="emptyNewBtn">Write a new memo</button>
+      </div>
+
+      <!-- sheet -->
+      <article class="sheet" id="sheet" hidden>
+        <div class="sheet-top">
+          <div class="swatches" id="swatches" role="group" aria-label="Memo colour"></div>
+          <div class="sheet-tools">
+            <button class="paper-btn" id="pageLockBtn">Lock this memo</button>
+            <button class="paper-btn danger" id="deleteBtn">Delete memo</button>
+          </div>
+        </div>
+
+        <input class="sheet-title" id="title" placeholder="Untitled memo" maxlength="120" spellcheck="false">
+
+        <div class="sheet-meta" id="meta"></div>
+
+        <textarea class="sheet-body" id="bodyInput" placeholder="Write here…" spellcheck="true"></textarea>
+
+        <!-- shown instead of the body when the memo has its own password -->
+        <div class="sealed" id="sealed" hidden>
+          <div class="seal" aria-hidden="true"></div>
+          <p class="sealed-title">This memo has its own password.</p>
+          <form class="sealed-form" id="sealedForm" autocomplete="off">
+            <input type="password" id="sealedPass" placeholder="Memo password" autocomplete="off" spellcheck="false">
+            <button class="btn btn-brass" type="submit">Open memo</button>
+          </form>
+          <p class="notice on-paper" id="sealedNotice" role="status"></p>
+        </div>
+
+        <div class="sheet-foot" id="sheetFoot">
+          <span class="save-state" id="saveState">Saved</span>
+        </div>
+      </article>
+    </main>
+  </div>
+</div>
+
+<!-- ───────────────────────────── Dialog ───────────────────────────── -->
+<div class="modal" id="modal" hidden>
+  <form class="modal-card" id="modalForm" autocomplete="off">
+    <h2 class="modal-title" id="modalTitle"></h2>
+    <p class="modal-sub" id="modalSub"></p>
+    <div id="modalFields"></div>
+    <p class="notice" id="modalNotice" role="status"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-quiet" id="modalCancel">Cancel</button>
+      <button type="submit" class="btn btn-brass" id="modalOk">Confirm</button>
+    </div>
+  </form>
+</div>
+
+<input type="file" id="fileInput" accept="application/json,.json,.diary" hidden>
+<div class="toast" id="toast" hidden></div>
+
+<script src="assets/crypto.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
